@@ -1,9 +1,6 @@
 """
 Proyecto Final - Análisis Numérico (Pontificia Universidad Javeriana)
 Interpolación de Lagrange - Población de UCRANIA (1994-2023)
-
-Uso:  python Lagrange/lagrange.py
-Dependencias: openpyxl (lectura del Excel). Las gráficas están en graficas.py.
 """
 import sys
 from pathlib import Path
@@ -11,7 +8,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from datos import cargar_datos
-
 
 # ---------------------------------------------------------------------------
 # 1. ALGORITMO DE LAGRANGE
