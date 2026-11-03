@@ -97,15 +97,36 @@ def graficas_lagrange():
 
 
 # ---------------------------------------------------------------------------
-# TRAZADORES  (pendiente)
+# TRAZADORES CÚBICOS
 # ---------------------------------------------------------------------------
-# def graficas_trazadores():
-#     ...  usar dibujar_puntos() y grafica_errores() igual que en Lagrange
+def graficas_trazadores():
+    x_nodos, a, b, c, d = construir_trazador_cubico_natural(nodos, valores)
+    aprox = [evaluar_trazador(a_res, x_nodos, a, b, c, d) for a_res in resaltados]
+    errores = [error_relativo(e, p) for e, p in zip(exactos_res, aprox)]
+
+    def curva_trazador(a_min, b_max, pasos=600):
+        xs = [a_min + (b_max - a_min) * i / pasos for i in range(pasos + 1)]
+        ys = [evaluar_trazador(x_val, x_nodos, a, b, c, d) for x_val in xs]
+        return xs, ys
+
+    # 1. Curva del Trazador Cúbico Natural
+    fig, ax = plt.subplots(figsize=(8, 5))
+    xs, ys = curva_trazador(min(nodos), max(nodos))
+    ax.plot(xs, ys, "b-", label="Trazador Cúbico Natural")
+    dibujar_puntos(ax, aprox)
+    ax.set_title("Trazador Cúbico Natural - curva ajustada (1995-2022)")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(SALIDA / "trazador_curva.png", dpi=150)
+
+    # 2. Error relativo por año para trazadores
+    grafica_errores(errores, "Trazador Cúbico - error relativo por año",
+                    "trazador_errores.png")
 
 
 if __name__ == "__main__":
     SALIDA.mkdir(exist_ok=True)
     graficas_lagrange()
-    # graficas_trazadores()
+    graficas_trazadores()
     print("Gráficas guardadas en", SALIDA)
     plt.show()
