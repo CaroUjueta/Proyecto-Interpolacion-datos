@@ -21,6 +21,11 @@ import matplotlib.pyplot as plt
 
 from datos import cargar_datos
 from lagrange import error_relativo, lagrange
+from trazadores import (
+    construir_trazador_cubico_natural,
+    evaluar_trazador,
+    error_relativo
+)
 
 # ---------------------------------------------------------------------------
 # Datos compartidos
