@@ -126,9 +126,63 @@ def graficas_trazadores():
                     "trazador_errores.png")
 
 
+# ---------------------------------------------------------------------------
+# COMPARACIÓN LAGRANGE vs TRAZADORES vs VALORES EXACTOS
+# ---------------------------------------------------------------------------
+def graficas_comparacion():
+    x_nodos, a, b, c, d = construir_trazador_cubico_natural(nodos, valores)
+    ap_lag = [lagrange(r, nodos, valores) for r in resaltados]
+    ap_tra = [evaluar_trazador(r, x_nodos, a, b, c, d) for r in resaltados]
+    err_lag = [error_relativo(e, p) for e, p in zip(exactos_res, ap_lag)]
+    err_tra = [error_relativo(e, p) for e, p in zip(exactos_res, ap_tra)]
+
+    pasos = 600
+    xs = [min(años) + (max(años) - min(años)) * i / pasos for i in range(pasos + 1)]
+
+    # 1. Curvas de ambos métodos junto con los datos exactos
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    ax.plot(xs, [lagrange(x, nodos, valores) for x in xs],
+            color="tab:orange", label="Lagrange (grado 24)")
+    ax.plot(xs, [evaluar_trazador(x, x_nodos, a, b, c, d) for x in xs],
+            "b-", label="Trazador cúbico natural")
+    ax.plot(años, poblacion, "k.", ms=5, label="Datos exactos")
+    ax.plot(resaltados, exactos_res, "rx", ms=10, mew=2,
+            label="Exactos (años resaltados)")
+    ax.plot(resaltados, ap_lag, "^", color="tab:orange", ms=8,
+            label="Lagrange (años resaltados)")
+    ax.plot(resaltados, ap_tra, "bs", ms=7, label="Trazador (años resaltados)")
+    ax.set_ylim(min(poblacion) * 0.95, max(poblacion) * 1.03)
+    ax.set_xlabel("Año")
+    ax.set_ylabel("Población")
+    ax.set_title("Comparación: Lagrange vs Trazador cúbico vs datos exactos\n"
+                 "(eje vertical recortado: Lagrange se sale en 1994 y 2023)")
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(SALIDA / "comparacion_curvas.png", dpi=150)
+
+    # 2. Error relativo de ambos métodos (escala logarítmica)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    pos = range(len(resaltados))
+    w = 0.38
+    ax.bar([p - w / 2 for p in pos], err_lag, w, color="tab:orange", label="Lagrange")
+    ax.bar([p + w / 2 for p in pos], err_tra, w, color="tab:blue", label="Trazador cúbico")
+    ax.set_yscale("log")
+    ax.set_xticks(list(pos))
+    ax.set_xticklabels([str(r) for r in resaltados])
+    ax.set_xlabel("Año resaltado")
+    ax.set_ylabel("Error relativo (escala logarítmica)")
+    ax.set_title("Error relativo: Lagrange vs Trazador cúbico")
+    ax.grid(alpha=0.3, axis="y", which="both")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(SALIDA / "comparacion_errores.png", dpi=150)
+
+
 if __name__ == "__main__":
     SALIDA.mkdir(exist_ok=True)
     graficas_lagrange()
     graficas_trazadores()
+    graficas_comparacion()
     print("Gráficas guardadas en", SALIDA)
     plt.show()
