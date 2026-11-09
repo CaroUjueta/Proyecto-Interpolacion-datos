@@ -7,7 +7,7 @@ Dependencias: openpyxl y matplotlib.
 
 Secciones:
   - Lagrange   (listo)
-  - Trazadores (pendiente: agregar sus funciones y llamarlas en main())
+  - Trazadores (listo)
 """
 import sys
 from pathlib import Path
@@ -16,16 +16,13 @@ RAIZ = Path(__file__).resolve().parent
 SALIDA = RAIZ / "graficas"
 sys.path.append(str(RAIZ))
 sys.path.append(str(RAIZ / "Lagrange"))
+sys.path.append(str(RAIZ / "Trazadores"))
 
 import matplotlib.pyplot as plt
 
 from datos import cargar_datos
 from lagrange import error_relativo, lagrange
-from trazadores import (
-    construir_trazador_cubico_natural,
-    evaluar_trazador,
-    error_relativo
-)
+from trazadores import construir_trazador_cubico_natural, evaluar_trazador
 
 # ---------------------------------------------------------------------------
 # Datos compartidos
