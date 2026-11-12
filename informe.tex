@@ -27,13 +27,12 @@
 }
 
 \title{Proyecto Final de Análisis Numérico\\
-\large Interpolación de la población de Ucrania (1994--2023)\\
-con Lagrange y Trazadores Cúbicos Naturales}
-\author{Pau V\\
+\large Interpolación de la población de Ucrania (1994--2023)\\}
+\author{Paula Villamil González, Carolina Ujueta Ricardo\\
 Pontificia Universidad Javeriana\\
-Facultad de Ciencias, Departamento de Matemáticas\\
+Departamento de Matemáticas\\
 Análisis Numérico}
-\date{Noviembre 2026}
+\date{noviembre de 2026}
 
 \begin{document}
 \maketitle
@@ -47,7 +46,7 @@ partir de datos discretos.
 
 El conjunto de datos tiene 30 registros anuales. De ellos, 25 se usan como nodos
 de interpolación (las filas sin color en el Excel) y los otros 5, que están
-resaltados, se reservan como datos de prueba. Estos últimos se aproximan con cada
+resaltados (subrayados en el enunciado), se reservan como datos de prueba. Estos últimos se aproximan con cada
 método y luego se comparan con el valor real. Los años de prueba son 1994, 2002,
 2009, 2017 y 2023. Dos de ellos, 1994 y 2023, quedan fuera del rango de los
 nodos (1995--2022), de modo que en ellos se extrapola. Los otros tres, 2002, 2009
@@ -68,7 +67,7 @@ E_r = \frac{|y_{\text{exacto}} - y_{\text{aprox}}|}{|y_{\text{exacto}}|},
 que permite comparar errores de distintos años sin importar la magnitud de la
 población.
 
-\section{Implementación de los Algoritmos}
+\section{Implementación de los algoritmos}
 
 Se eligió Python 3 por tres razones. Su sintaxis es clara y se parece a la
 notación matemática de los algoritmos. Sus números de punto flotante son de doble
@@ -80,21 +79,21 @@ interpolación no usan ninguna librería numérica: se programaron desde cero co
 listas y ciclos de Python, para que cada paso se pueda seguir y explicar.
 
 El proyecto es modular. Cada algoritmo vive en su propio archivo y se puede
-ejecutar por separado con \texttt{python Lagrange/lagrange.py} o
-\texttt{python Trazadores/trazadores.py}. Ambos importan la lectura de datos
+ejecutar por separado con \texttt{python lagrange.py} o
+\texttt{python trazadores.py}. Ambos importan la lectura de datos
 desde \texttt{datos.py}, así que el Excel se lee en un solo lugar y los dos
-métodos usan exactamente los mismos 25 nodos.
+métodos usan exactamente los mismos 25 nodos. 
 
 \subsection{Estructura del programa}
 \begin{itemize}
     \item \texttt{datos.py}: lee el archivo Excel y separa nodos y datos de prueba.
-    \item \texttt{Lagrange/lagrange.py}: polinomio interpolador de Lagrange.
-    \item \texttt{Trazadores/trazadores.py}: trazador cúbico natural (algoritmo de Thomas).
+    \item \texttt{lagrange.py}: polinomio interpolador de Lagrange.
+    \item \texttt{trazadores.py}: trazador cúbico natural (algoritmo de Thomas).
     \item \texttt{graficas.py}: genera las curvas y los diagramas de error en formato PNG.
 \end{itemize}
 
 \subsection{Captura y organización de datos (\texttt{datos.py})}
-El Excel tiene el año en la columna B y la población en la columna C. La función
+Para el desarrollo del Proyecto se descargó exclusivamente la hoja correspondiente a Ucrania, ya que fue el país asignado para el desarrollo del taller. El Excel tiene el año en la columna B y la población en la columna C. La función
 \texttt{cargar\_datos} recorre las filas desde la segunda, porque la primera es el
 encabezado, y descarta las filas vacías. Para decidir si una fila es nodo o dato de
 prueba revisa el relleno de la celda del año. Si es sólido, la fila está resaltada
@@ -155,39 +154,47 @@ def error_relativo(exacto, aprox):
 \end{lstlisting}
 
 \subsection{Algoritmo 2: Trazador cúbico natural (\texttt{trazadores.py})}
-Los polinomios de grado alto tienden a oscilar. Para evitarlo se implementó el
-Algoritmo 3.4 del libro de Burden y Faires. En cada tramo $[x_j, x_{j+1}]$ se usa
-un polinomio cúbico
-\[
-S_j(x) = a_j + b_j (x - x_j) + c_j (x - x_j)^2 + d_j (x - x_j)^3 .
-\]
-Con 25 nodos hay 24 tramos y, por tanto, $4 \cdot 24 = 96$ coeficientes por
-determinar. Las condiciones que los fijan son:
-\begin{itemize}
-    \item $S_j(x_j) = y_j$ y $S_j(x_{j+1}) = y_{j+1}$, es decir, la curva pasa por
-    todos los nodos;
-    \item la primera y la segunda derivada coinciden a ambos lados de cada nodo
-    interior, de modo que la curva no tiene picos ni cambios bruscos de curvatura;
-    \item las condiciones de frontera naturales $S''(x_0) = S''(x_n) = 0$, que
-    completan el sistema.
-\end{itemize}
-Se tiene $a_j = y_j$ directamente. Al sustituir las demás condiciones, todo se
-reduce a un sistema tridiagonal en las incógnitas $c_j$, con lado derecho
-\[
-\alpha_i = \frac{3}{h_i}(a_{i+1} - a_i) - \frac{3}{h_{i-1}}(a_i - a_{i-1}),
-\qquad h_i = x_{i+1} - x_i .
-\]
-Ese sistema se resuelve con el algoritmo de Thomas, una factorización de Crout
-que usa los vectores auxiliares $l_i$, $\mu_i$ y $z_i$ y cuesta $O(n)$
-operaciones. Después, una sustitución hacia atrás entrega $c_j$ y, a partir de
-él, $b_j$ y $d_j$:
-\[
-b_j = \frac{a_{j+1} - a_j}{h_j} - \frac{h_j (c_{j+1} + 2c_j)}{3}, \qquad
-d_j = \frac{c_{j+1} - c_j}{3 h_j} .
-\]
-El código sigue estos pasos en el mismo orden.
 
-\begin{lstlisting}
+Los polinomios de interpolación de grado alto tienden a presentar oscilaciones severas cerca de los extremos del intervalo (fenómeno de Runge). Para evitar esta inestabilidad, se implementó el trazador cúbico natural basado en el Algoritmo 3.4 del libro de Burden y Faires \cite{burden}. En cada tramo o subintervalo $[x_j, x_{j+1}]$ para $j = 0, \dots, n-1$, se define un polinomio cúbico independiente de la forma:
+\\[
+S_j(x) = a_j + b_j (x - x_j) + c_j (x - x_j)^2 + d_j (x - x_j)^3.
+\\]
+Con $n+1 = 25$ nodos de interpolación existen $n = 24$ tramos y, por lo tanto, $4 \cdot 24 = 96$ coeficientes desconocidos por determinar. Las condiciones matemáticas que garantizan la suavidad y continuidad del trazador son:
+\begin{itemize}
+    \item \textbf{Interpolación en nodos:} $S_j(x_j) = y_j$ y $S_j(x_{j+1}) = y_{j+1}$, asegurando que la curva pase exactamente por todos los datos conocidos.
+    \item \textbf{Continuidad de derivadas ($S'$ y $S''$):} La primera y la segunda derivada coinciden a ambos lados de cada nodo interior $x_j$ ($j = 1, \dots, n-1$), de modo que la función interpolante carece de picos o cambios bruscos de curvatura.
+    \item \textbf{Condiciones de frontera naturales:} $S''(x_0) = S''(x_n) = 0$, que imponen curvatura nula en los extremos y completan las ecuaciones requeridas.
+\end{itemize}
+
+Directamente se establece $a_j = y_j$. Al sustituir las condiciones de continuidad de derivadas y fronteras naturales, el problema se reduce a resolver un sistema lineal de ecuaciones tridiagonal de orden $(n+1) \times (n+1)$ para los coeficientes cuadráticos $c_j$, de la forma $A \mathbf{c} = \boldsymbol{\alpha}$, donde el vector del lado derecho está dado por:
+
+\\
+
+\alpha_i = \frac{3}{h_i}(a_{i+1} - a_i) - \frac{3}{h_{i-1}}(a_i - a_{i-1}), \qquad h_i = x_{i+1} - x_i \quad (i = 1, \dots, n-1).
+\\
+
+Para resolver el sistema tridiagonal de manera óptima, no se recurre a la eliminación gaussiana estándar ni a la inversión matricial tradicional, las cuales requieren una complejidad computacional de $\mathcal{O}(n^3)$ operaciones numéricas y una memoria de $\mathcal{O}(n^2)$. En su lugar, se emplea el \textbf{Algoritmo de Thomas} (también conocido como \textit{Tri-Diagonal Matrix Algorithm} o TDMA), el cual constituye una versión especializada y eficiente de la \textbf{Factorización de Crout} para matrices tridiagonales diagonales dominantes \cite{burden, thomas1949}.
+
+La Factorización de Crout descompone la matriz tridiagonal $A$ en el producto de dos matrices triangulares $A = L U$, donde $L$ es una matriz triangular inferior y $U$ es una matriz triangular superior con unos en su diagonal principal. El Algoritmo de Thomas aprovecha la estructura de ceros estructurales de $A$ para efectuar esta descomposición y resolver el sistema mediante dos etapas de complejidad lineal $\mathcal{O}(n)$ en tiempo y memoria:
+
+\begin{enumerate}
+    \item \textbf{Barrido hacia adelante (Factorización $LU$ y solución de $L \mathbf{z} = \boldsymbol{\alpha}$):}
+    Se imponen las condiciones iniciales de frontera natural en $i = 0$ ($l_0 = 1$, $\mu_0 = 0$, $z_0 = 0$). Para $i = 1, \dots, n-1$, se calculan los elementos diagonales de $L$ ($l_i$), los elementos de la superdiagonal de $U$ ($\mu_i$) y las incógnitas intermedias del vector $\mathbf{z}$ ($z_i$):
+    \\[
+    l_i = 2(x_{i+1} - x_{i-1}) - h_{i-1} \mu_{i-1}, \qquad \mu_i = \frac{h_i}{l_i}, \qquad z_i = \frac{\alpha_i - h_{i-1} z_{i-1}}{l_i}.
+    \\]
+    En el nodo final $i = n$, la condición natural establece $l_n = 1$ y $z_n = 0$, asegurando $c_n = 0$.
+
+    \item \textbf{Sustitución hacia atrás (Solución de $U \mathbf{c} = \mathbf{z}$ y coeficientes del trazador):}
+    Recorriendo en orden descendente desde $j = n-1$ hasta $0$, se obtienen los coeficientes cuadráticos $c_j$ y, consecuentemente, los coeficientes lineal $b_j$ y cúbico $d_j$:
+    \\[
+    c_j = z_j - \mu_j c_{j+1}, \qquad b_j = \frac{a_{j+1} - a_j}{h_j} - \frac{h_j (c_{j+1} + 2c_j)}{3}, \qquad d_j = \frac{c_{j+1} - c_j}{3 h_j}.
+    \\]
+\end{enumerate}
+
+El código implementado en \texttt{trazadores.py} sigue rigurosamente esta secuencia matemática:
+
+\begin{lstlisting}[language=Python, caption={Algoritmo de construcción del trazador cúbico natural}]
 def construir_trazador_cubico_natural(nodos, valores):
     puntos = sorted(zip(nodos, valores))
     x = [float(p[0]) for p in puntos]
@@ -203,7 +210,7 @@ def construir_trazador_cubico_natural(nodos, valores):
         alpha[i] = (3.0 / h[i]) * (a[i + 1] - a[i]) \
                  - (3.0 / h[i - 1]) * (a[i] - a[i - 1])
 
-    # Algoritmo de Thomas (Crout)
+    # Algoritmo de Thomas (Factorización de Crout)
     l = [1.0] + [0.0] * n
     mu = [0.0] * (n + 1)
     z = [0.0] * (n + 1)
@@ -228,12 +235,9 @@ def construir_trazador_cubico_natural(nodos, valores):
     return x, a[:n], b, c[:n], d
 \end{lstlisting}
 
-Una vez construidos los coeficientes, la función \texttt{evaluar\_trazador}
-busca el tramo $[x_j, x_{j+1}]$ que contiene al año pedido y evalúa ahí el
-polinomio cúbico. Si el año queda fuera de $[x_0, x_n]$, usa el primer o el
-último tramo, que es lo que ocurre en 1994 y 2023.
+Una vez calculados los coeficientes $(a, b, c, d)$, la función \texttt{evaluar\_trazador} localiza el subintervalo $[x_j, x_{j+1}]$ correspondiente al año solicitado y evalúa el polinomio cúbico respectivo. Si el año a evaluar se encuentra fuera del rango nodal $[x_0, x_n]$, se emplea el primer o último polinomio según corresponda (extrapolación por tramos), como sucede para los años 1994 y 2023.
 
-\begin{lstlisting}
+\begin{lstlisting}[language=Python, caption={Evaluación del trazador en un punto dado}]
 def evaluar_trazador(x_eval, x, a, b, c, d):
     n = len(b)
     # Selección del tramo polinomial j
@@ -251,11 +255,7 @@ def evaluar_trazador(x_eval, x, a, b, c, d):
     return a[j] + b[j]*dx + c[j]*dx**2 + d[j]*dx**3
 \end{lstlisting}
 
-Cada archivo tiene una función \texttt{main} que carga los datos, construye el
-polinomio o el trazador, lo evalúa en los cinco años resaltados e imprime una
-tabla con el valor exacto, el valor aproximado y el error relativo.
-\texttt{graficas.py} importa las mismas funciones para dibujar las curvas, de modo
-que las gráficas y las tablas salen siempre del mismo cálculo.
+Cada módulo de interpolación cuenta con una función \texttt{main} que carga los datos mediante \texttt{datos.py}, construye el modelo (Lagrange o trazador), lo evalúa en los cinco años resaltados de prueba e imprime una tabla comparativa con los valores exactos, aproximados y sus correspondientes errores relativos. Finalmente, \texttt{graficas.py} importa estas mismas funciones para trazar las curvas continuas y generar los gráficos de error, garantizando absoluta consistencia entre los resultados tabulares y los gráficos presentados.
 
 \subsection{Tabla de variables principales}
 \begin{table}[H]
@@ -294,11 +294,33 @@ separan los datos. Los otros dos describen el cálculo de cada método.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{algoritmo_trazadores.pdf}
+    \includegraphics[width=\textwidth,height=0.95\textheight,keepaspectratio]{algoritmo_trazadores.pdf}
     \caption{Flujo del trazador cúbico natural.}
 \end{figure}
 
+\subsection{Instrucciones para ejecutar el código}
+El código necesita Python 3.9 o superior y las librerías \texttt{openpyxl} y
+\texttt{matplotlib}, que se instalan con
+\begin{verbatim}
+pip install -r requirements.txt
+\end{verbatim}
+Todos los comandos se ejecutan desde la carpeta principal del proyecto, donde
+están \texttt{datos.py} y el archivo Excel:
+\begin{itemize}
+    \item \texttt{python lagrange.py} construye el polinomio de Lagrange
+    con los 25 nodos e imprime, para los 5 años resaltados, el valor exacto, el
+    valor aproximado y el error relativo.
+    \item \texttt{python trazadores.py} hace lo mismo con el trazador
+    cúbico natural.
+    \item \texttt{python graficas.py} genera todas las gráficas de este informe en
+    la carpeta \texttt{graficas/}, que se crea sola.
+\end{itemize}
+Los archivos \texttt{lagrange.py} y \texttt{trazadores.py} solo necesitan
+\texttt{datos.py} y el Excel, por lo que se pueden correr sin generar las gráficas.
+
 \section{Resultados}
+
+\subsection{Resultados por método}
 
 Se evaluaron ambos métodos en los 5 años de prueba, usando solo los 25 nodos. Las
 tablas siguientes muestran, para cada año, el valor exacto, la aproximación y el
@@ -310,7 +332,7 @@ error relativo. Los valores son los que imprimen los programas
 \small
 \begin{tabular}{rrrr}
 \toprule
-Año & Valor exacto & Lagrange & Error relativo \\
+Año & Valor exacto & Aproximación (Lagrange) & Error relativo \\
 \midrule
 1994 & 52\,076\,000 & $-21\,736\,816\,040{,}49$ & $418{,}4056386913$ \\
 2002 & 48\,677\,280 & 48\,695\,338{,}85 & $0{,}0003709914$ \\
@@ -327,7 +349,7 @@ Año & Valor exacto & Lagrange & Error relativo \\
 \small
 \begin{tabular}{rrrr}
 \toprule
-Año & Valor exacto & Trazador cúbico & Error relativo \\
+Año & Valor exacto & Aproximación (trazador) & Error relativo \\
 \midrule
 1994 & 52\,076\,000 & 52\,104\,959{,}00 & $0{,}0005560911$ \\
 2002 & 48\,677\,280 & 48\,683\,629{,}82 & $0{,}0001304474$ \\
@@ -342,7 +364,7 @@ Año & Valor exacto & Trazador cúbico & Error relativo \\
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{lagrange_curva_completa.png}
-    \caption{Polinomio de Lagrange en todo el rango 1994--2023: se dispara en los extremos.}
+    \caption{Polinomio de Lagrange en todo el rango 1994--2023: diverge en los extremos.}
 \end{figure}
 
 \begin{figure}[H]
@@ -392,7 +414,7 @@ Año & Valor exacto & Error rel. Lagrange & Error rel. trazador \\
     \centering
     \includegraphics[width=\linewidth]{comparacion_curvas.png}
     \caption{Lagrange, trazador cúbico y valores exactos en una sola gráfica. El eje vertical
-    está recortado para poder ver los datos; Lagrange se sale de la gráfica en 1994 y 2023.}
+    está recortado para poder ver los datos; Lagrange queda fuera del rango mostrado en 1994 y 2023.}
 \end{figure}
 
 \begin{figure}[H]
@@ -408,8 +430,8 @@ Año & Valor exacto & Error rel. Lagrange & Error rel. trazador \\
     \item Extrapolación en 1994 y 2023. Estos dos años quedan fuera del rango de
     los nodos (1995--2022). Lagrange falla por completo: predice poblaciones
     negativas del orden de $-2\times10^{10}$ y $-3\times10^{10}$, con errores
-    relativos de 418 y 886, es decir, más de $4\times10^{4}\,\%$. El valor
-    es absurdo, porque la población real es de unos 52 y 38 millones.
+    relativos de 418 y 886, es decir, de $4{,}2\times10^{4}\,\%$ y $8{,}9\times10^{4}\,\%$. El resultado
+    carece de sentido físico, porque la población real es de unos 52 y 38 millones.
     \item Interpolación en 2002, 2009 y 2017. Dentro del rango Lagrange aproxima
     bien, con errores entre $3\times10^{-4}$ y $7\times10^{-3}$ (de $0{,}03\,\%$ a
     $0{,}70\,\%$). Aun así, el trazador es mejor en los tres años. En 2017 el error
@@ -423,7 +445,7 @@ Año & Valor exacto & Error rel. Lagrange & Error rel. trazador \\
 La gráfica comparativa muestra que ambas curvas coinciden con los datos en la
 parte central (aproximadamente 1998--2016). Cerca de los bordes del intervalo,
 Lagrange empieza a oscilar: se ven ondas antes de 1998 y después de 2018, y entre
-1995 y 1996 y entre 2021 y 2022 la curva se sale de la gráfica. El trazador, en
+1995 y 1996 y entre 2021 y 2022 la curva queda fuera del rango mostrado. El trazador, en
 cambio, sigue de forma suave la caída de la población de los últimos años.
 
 \subsection{Por qué se produjeron estas diferencias}
@@ -433,23 +455,31 @@ cambio, sigue de forma suave la caída de la población de los últimos años.
     los datos se propaga a todo el intervalo. El trazador es local: cada tramo
     depende sobre todo de los nodos vecinos, por lo que una irregularidad solo
     afecta a su entorno.
-    \item Fenómeno de Runge. Al interpolar con un polinomio de grado alto en nodos
-    casi equiespaciados, el error se concentra en los extremos del intervalo y
-    crece con el grado. Aquí los nodos son los años 1995--2022 sin 2002, 2009 y
-    2017, es decir, casi equiespaciados, y el grado es 24. Por eso Lagrange oscila
-    en los bordes aun dentro del rango de los nodos. Fuera de él, el polinomio
-    crece como $x^{24}$ y se dispara, lo que explica los valores del orden de
-    $10^{10}$ en 1994 y 2023.
+    \item Fenómeno de Runge. Carl Runge descubrió en 1901 que cuando los nodos están distribuidos de forma uniforme (equiespaciada), aumentar el grado del polinomio provoca que este oscile con amplitudes crecientes cerca de los extremos del intervalo \cite{runge1901}.
+
+Este comportamiento se explica matemáticamente mediante el término del error de interpolación \cite{burden}:
+\[
+f(x) - P(x) = \frac{f^{(n)}(\xi)}{n!} \prod_{k=0}^{n-1} (x - x_k), \qquad \text{con } n = 25.
+\]
+El producto nodal $\prod_{k=0}^{n-1} (x - x_k)$ adopta valores pequeños en el centro del intervalo, pero sus magnitudes se disparan de forma exponencial conforme $x$ se acerca a los extremos $x_0$ y $x_n$. Dado que los registros de población de Ucrania son anuales y están prácticamente equiespaciados ($h \approx 1$ año), un grado tan alto ($n-1 = 24$) desata exactamente este fenómeno:
+\begin{itemize}
+    \item En la zona central ($1998$--$2016$) el polinomio es estable y entrega errores inferiores al $0{,}04\,\%$ (años 2002 y 2009).
+    \item Cerca de los bordes del rango de datos ($1995$--$1997$ y $2020$--$2022$), el polinomio genera crestas y valles artificiales muy pronunciados (visibles en la Figura 5), aumentando el error en el año 2017 a $0{,}70\,\%$.
+\end{itemize}
+Por fuera de los nodos ($1994$ y $2023$) el polinomio ya no solo oscila, sino que se dispara asintóticamente como $x^{24}$, explicando los valores absurdos del orden de $-10^{10}$.
+    
     \item Cambio de tendencia. La población baja casi de forma lineal hasta 2020 y
     a partir de 2021 cae con rapidez. Ese cambio de pendiente obliga a un polinomio de
     grado 24 a oscilar para pasar por todos los nodos, mientras que los tramos
     cúbicos se adaptan a la curvatura local sin afectar al resto de la curva.
-    \item Condiciones de frontera. El trazador natural impone $S''=0$ en los
-    extremos. Esto hace que la curva llegue a los extremos sin curvatura, y en 1994 y 2023 se
-    evalúa el primer y el último tramo, que son cúbicos y de coeficientes
-    moderados. Como el cúbico crece mucho más despacio que un polinomio de grado
-    24, el valor no se dispara en un año fuera del rango, aunque la extrapolación
-    se vuelve poco fiable si el horizonte es largo.
+    \item Grado y condiciones de frontera. En 1994 y 2023 se evalúa el primer y el
+    último tramo, que son cúbicos. La razón principal por la que el valor no
+    diverge es el bajo grado: un cúbico crece como $x^{3}$ y no como $x^{24}$.
+    La condición natural $S''=0$ solo fija la curvatura en los extremos y no
+    garantiza una buena extrapolación. Además, solo hay dos años extrapolados,
+    ambos a un año de distancia de los nodos, y el mayor error del trazador
+    ($0{,}175\,\%$) ocurre justo en 2023, así que la extrapolación se vuelve
+    poco fiable si el horizonte es largo.
     \item Condicionamiento numérico. El cálculo de Lagrange suma términos de
     magnitud enorme con signos alternos, lo que provoca cancelación y pérdida de
     cifras significativas. El sistema del trazador es tridiagonal y diagonalmente
@@ -469,15 +499,36 @@ cambio, sigue de forma suave la caída de la población de los últimos años.
     \item Interpolar 25 puntos casi equiespaciados con un único polinomio de grado
     24 es numéricamente inestable cerca de los bordes del intervalo. Lagrange solo
     es confiable en el interior del rango de nodos y no debe usarse para extrapolar.
-    \item El trazador también extrapola mejor (errores de $0{,}06\,\%$ en 1994 y
-    $0{,}18\,\%$ en 2023), aunque cualquier extrapolación debe tomarse con cautela,
-    porque la curva no tiene información fuera de los nodos.
+    \item En los dos años extrapolados, el trazador también fue mejor (errores de
+    $0{,}06\,\%$ en 1994 y $0{,}18\,\%$ en 2023). Como son solo dos casos, a un año
+    de los nodos, cualquier extrapolación debe tomarse con cautela, porque la
+    curva no tiene información fuera de los nodos.
     \item Para series largas, como esta serie demográfica, conviene usar
     polinomios de grado bajo por tramos, como los trazadores, en lugar de un único
     polinomio de grado alto.
-    \item Subir el grado del polinomio no garantiza una mejor aproximación. Con nodos
-    equiespaciados, el error de Lagrange puede crecer al aumentar el número de
-    nodos, mientras que el error del trazador disminuye al refinar la malla.
+    \item Subir el grado del polinomio no garantiza una mejor aproximación. En teoría
+    (fenómeno de Runge), con nodos equiespaciados el error de Lagrange puede crecer
+    al aumentar el número de nodos, mientras que el del trazador disminuye al
+    refinar la malla. Este proyecto no lo comprobó experimentalmente.
 \end{enumerate}
+
+
+\begin{thebibliography}{9}
+
+\bibitem{burden} 
+R.~L. Burden, J.~D. Faires, y A.~M. Burden, 
+\emph{Numerical Analysis}, 10.\textsuperscript{a}~ed. Boston, MA: Cengage Learning, 2016.
+
+\bibitem{runge1901}
+C.~Runge, 
+``Über empirische Funktionen und die Interpolation zwischen äquidistanten Ordinaten,'' 
+\emph{Zeitschrift für Mathematik und Physik}, vol.~46, pp.~224--243, 1901.
+
+\bibitem{thomas1949} 
+L.~H. Thomas, 
+``Elliptic Problems in Linear Difference Equations over a Network,'' 
+Watson Scientific Computing Laboratory, Columbia University, New York, Tech. Rep., 1949.
+
+\end{thebibliography}
 
 \end{document}
